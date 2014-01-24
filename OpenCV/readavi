@@ -1,0 +1,11 @@
+	while(1)
+	{
+		
+		frame = cvQueryFrame(capture);
+		if(!frame) break;
+		cvShowImage("实时视频",frame);
+		char c = cvWaitKey(40);   //原始视频是25fps，所以40较合适
+		if(c == 27) break;
+	}
+	cvReleaseCapture(&capture);
+	cvDestroyWindow("AVI Playing");
