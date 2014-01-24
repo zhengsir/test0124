@@ -1,0 +1,211 @@
+
+int main_2013_summer(int argc,char *argv[])
+{
+	clock_t start, finish; 
+	double duration; 
+	start = clock(); 
+
+	//声明IplImage结构体
+	IplImage *pImg_in, *pImg_out, *pImg_out_1, *pImg_out_2, *pImg_out_3, *pImg_out_4, *pImg_out_5, *pImg_out_6, *pImg_out_7, *pImg_out_8;
+	int width, height, widthstep, nchannels, depth, imagesize ;
+	long hist[256] = { 0 } ;
+	long max_width = 0 ;
+
+	//声明uchar图像数据
+	uchar *data_in, *data_out, *data_out_1, *data_out_2, *data_out_3, *data_out_4, *data_out_5, *data_out_6, *data_out_7, *data_out_8;
+	
+	if( argc == 2 && 
+        (pImg_in = cvLoadImage(argv[1], 1)) != 0 )	//原始RGB图像
+    {
+		//初始化pImg_in
+		width = pImg_in->width ;
+		height = pImg_in->height ;
+		widthstep = pImg_in->widthStep ;
+		nchannels = pImg_in->nChannels ;
+		depth = pImg_in->depth ;
+		data_in = (uchar *)pImg_in->imageData ;	//强制将有符号char型转换成无符号char型，保证在0~255之间
+		imagesize = pImg_in->imageSize ;
+		printf("Original Image: %d x %d pix\n                widthstep = %d bytes\n                nchannels = %d\n                depth = %d bits\n                size = %d bytes\n",width, height, widthstep, nchannels, depth, imagesize ) ; //strlen遇到\0就表示字符串结束，
+		//*******************************图像处理函数 start *****************************//		
+		//灰度化 myGrayImg(height, width, nchannels, widthstep, data_in, data_out) ;
+		//直方图 max_width = myHistImg(height, width, hist, data_out) ; myHistDagram(hist, max_width, data_out_1);
+		//平滑处理 myMidSmooth(height, width, data_out, data_out_3) ;或myDilationImg(height, width, data_out, data_out_2);或myErosionImg(height, width, data_out, data_out_2);或myOpenImg(height, width, data_out, data_out_2);或myCloseImg(height, width, data_out, data_out_2);
+		//二值化 myThresholdImg(height, width, THRESH, data_out, data_out_2) ;
+		//边缘检测 myLaplaceImg(height, width, data_out_3, data_out_2,150);或 myPrewittImg(height, width, data_out, data_out_2,200);或 mySobelImg(height, width, data_out_2, data_out_3, 250);	
+		//连接区域标记并选择性提取 myAreaMark(height, width, data_out_3, data_out_4, data_out) ;
+		//特征参数提取 myCircleLenth(height, width, data_out_4, data_out_5) ;
+		//水平跳变、垂直投影 PLATE_Y = myHorizon_Flip(height, width, data_out_3, data_out_4, data_out_5); PLATE_X = myVertical_Cast(height, width, data_out_5, data_out_6, data_out_7);
+		//水平垂直投影 myHorizon_Vertical_Cast(height, width, data_out_3, data_out_4, data_out_5);		//水平和垂直投影，得到 data_out_4 data_out_5
+		//水平垂直跳变 myHorizon_Vertical_Flip(height, width, data_out_3, data_out_6, data_out_7);		//水平和垂直跳变，得到 data_out_6 data_out_7
+		//最终区域提取 myFinal_Filter(data_out, data_out_8, height, width, PLATE_Y.start - 2, PLATE_Y.stop + 2, PLATE_X.start - 2, PLATE_X.stop + 2);
+
+		pImg_out = cvCreateImage(cvSize(width, height), IPL_DEPTH_8U, 1) ;	
+		data_out = (uchar *)pImg_out->imageData ;
+		myGrayImg(height, width, nchannels, widthstep, data_in, data_out) ;	//灰度化图像，得到data_out灰度图像		
+
+		max_width = myHistImg(height, width, hist, data_out) ;	//直方图统计，得到hist数组
+		pImg_out_1 = cvCreateImage(cvSize(256 ,max_width), IPL_DEPTH_8U, 1) ;
+		data_out_1 = (uchar *)pImg_out_1->imageData ;
+		myHistDagram(hist, max_width, data_out_1);	//直方图图形化，得到data_out_1直方图	
+
+		pImg_out_2 = cvCreateImage(cvSize(width, height), IPL_DEPTH_8U, 1) ;
+		pImg_out_3 = cvCreateImage(cvSize(width, height), IPL_DEPTH_8U, 1) ;
+		pImg_out_4 = cvCreateImage(cvSize(width, height), IPL_DEPTH_8U, 1) ;
+		pImg_out_5 = cvCreateImage(cvSize(width, height), IPL_DEPTH_8U, 1) ;		
+		pImg_out_6 = cvCreateImage(cvSize(width, height), IPL_DEPTH_8U, 1) ;
+		pImg_out_7 = cvCreateImage(cvSize(width, height), IPL_DEPTH_8U, 1) ;
+		pImg_out_8 = cvCreateImage(cvSize(width, height), IPL_DEPTH_8U, 1) ;
+		 
+		data_out_2 = (uchar *)pImg_out_2->imageData ;
+		data_out_3 = (uchar *)pImg_out_3->imageData ;
+		data_out_4 = (uchar *)pImg_out_4->imageData ;
+		data_out_5 = (uchar *)pImg_out_5->imageData ;	
+		data_out_6 = (uchar *)pImg_out_6->imageData ;
+		data_out_7 = (uchar *)pImg_out_7->imageData ;
+		data_out_8 = (uchar *)pImg_out_8->imageData ;
+		myThresholdImg(height, width, THRESH, data_out, data_out_2) ;
+		myHoughLine(height, width, data_out_2, data_out_3);
+		//myMidSmooth(height, width, data_out, data_out_2) ;	 //3次中值滤波,	得到data_out_2平滑图像
+		
+		//myPrewittImg(height, width, data_out, data_out_3, 200);		//边缘检测，得到data_out_3边缘图像	
+		//myLaplaceImg(height, width, data_out, data_out_3,230);
+
+
+		//PLATE_Y = myHorizon_Flip(height, width, data_out_3, data_out_4, data_out_5);		//先水平跳变，过滤出车牌纵轴图像data_out_5
+		//PLATE_X = myVertical_Cast(height, width, data_out_5, data_out_6, data_out_7);		//再垂直投影，过滤出车牌横轴图像data_out_7
+		//myFinal_Filter(data_out, data_out_8, height, width, PLATE_Y.start - 2, PLATE_Y.stop + 2, PLATE_X.start - 2, PLATE_X.stop + 2);
+		//*******************************图像处理函数 stop *****************************//
+		//显示
+        cvNamedWindow( "Image_in:原始图像", 1 ) ;		
+		cvNamedWindow( "Image_out:灰度图像", 1 ) ;		
+		cvNamedWindow( "Image_out_1:直方图", 1 ) ;
+		cvNamedWindow( "Image_out_2:平滑处理", 1 ) ;
+		cvNamedWindow( "Image_out_3:边缘检测", 1 ) ;
+		cvNamedWindow( "Image_out_4:水平跳变", 1 ) ;
+		cvNamedWindow( "Image_out_5:水平提取", 1 ) ;
+		cvNamedWindow( "Image_out_6:垂直投影", 1 ) ;
+		cvNamedWindow( "Image_out_7:垂直提取", 1 ) ;
+		cvNamedWindow( "Image_out_8:最终提取", 1 ) ;
+
+		cvShowImage( "Image_in:原始图像", pImg_in ) ;
+        cvShowImage( "Image_out:灰度图像", pImg_out ) ;
+		cvShowImage( "Image_out_1:直方图", pImg_out_1 ) ;
+		cvShowImage( "Image_out_2:平滑处理", pImg_out_2 ) ; 
+		cvShowImage( "Image_out_3:边缘检测", pImg_out_3 ) ; 
+		cvShowImage( "Image_out_4:水平跳变", pImg_out_4 ) ; 
+		cvShowImage( "Image_out_5:水平提取", pImg_out_5 ) ; 
+		cvShowImage( "Image_out_6:垂直投影", pImg_out_6 ) ; 
+		cvShowImage( "Image_out_7:垂直提取", pImg_out_7 ) ; 
+		cvShowImage( "Image_out_8:最终提取", pImg_out_8 ) ;
+
+		finish = clock(); 
+		duration = (double)(finish - start) / CLOCKS_PER_SEC; 
+		printf( "%f seconds\n", duration ); 
+
+        cvWaitKey(0) ;  
+        cvDestroyWindow( "Image_in:原始图像" ) ;
+		cvDestroyWindow( "Image_out:灰度图像" ) ;
+		cvDestroyWindow( "Image_out_1:直方图" ) ;
+		cvDestroyWindow( "Image_out_2:平滑处理" ) ;
+		cvDestroyWindow( "Image_out_3:边缘检测" ) ;
+		cvDestroyWindow( "Image_out_4:水平跳变" ) ;
+		cvDestroyWindow( "Image_out_5:水平提取" ) ;
+		cvDestroyWindow( "Image_out_6:垂直投影" ) ;
+		cvDestroyWindow( "Image_out_7:垂直提取" ) ;
+		cvDestroyWindow( "Image_out_8:最终提取" ) ;
+        cvReleaseImage( &pImg_in ) ;
+		cvReleaseImage( &pImg_out ) ;
+		cvReleaseImage( &pImg_out_1 ) ;
+		cvReleaseImage( &pImg_out_2 ) ;
+		cvReleaseImage( &pImg_out_3 ) ;
+		cvReleaseImage( &pImg_out_4 ) ;
+		cvReleaseImage( &pImg_out_5 ) ;
+		cvReleaseImage( &pImg_out_6 ) ;
+		cvReleaseImage( &pImg_out_7 ) ;
+		cvReleaseImage( &pImg_out_8 ) ;
+        return 0 ;		
+    } 
+	else
+	{
+		myDebug("Paremeter error or Image file cann't open\n", 2);
+		//制作彩条
+		//myColorBar(100, 500);
+	}
+    return -1 ;
+}
+
+void my_mouse_callback(int event,int x,int y,int flags, void* param);
+CvRect box;
+bool drawing_box = false;
+void draw_box(IplImage *img,CvRect rect)
+{
+	cvRectangle(img, cvPoint(box.x, box.y), cvPoint(box.x + box.width , box.y + box.height ), cvScalar(0xff, 0x00, 0x00));
+}
+
+int main(int argc,char *argv[])
+{
+	cvNamedWindow("实时视频",CV_WINDOW_AUTOSIZE);
+	cvNamedWindow("第一帧图像",CV_WINDOW_AUTOSIZE);
+	CvCapture* capture = cvCreateFileCapture(argv[1]);
+	IplImage* frame;
+	IplImage* first_frame;
+	first_frame = cvQueryFrame(capture);
+	cvShowImage("第一帧图像",first_frame);
+
+	box = cvRect(-1, -1, 0, 0);
+	IplImage *temp = cvCloneImage(first_frame);
+	cvSetMouseCallback("第一帧图像", my_mouse_callback, (void *)first_frame);
+	while(1)
+	{
+		cvCopyImage(first_frame, temp);
+		if(drawing_box)
+			draw_box(temp, box);
+		cvShowImage("第一帧图像",temp);
+
+		if(cvWaitKey(40) == 27) break;
+	}
+}
+/*-------------------------------------------------------------------------
+功能：鼠标回调函数
+输入：鼠标事件，坐标
+输出：无
+date: 2014-01-23
+---------------------------------------------------------------------------*/
+	void my_mouse_callback(int event,int x, int y, int flags, void* param)
+	{
+		IplImage *image = (IplImage*) param;
+		switch(event)
+		{
+		case CV_EVENT_MOUSEMOVE:
+			{
+				if(drawing_box)
+				{
+					box.width = x - box.x;
+					box.height = y - box.y;
+				}
+			}
+			break;
+		case CV_EVENT_LBUTTONDOWN:
+			{
+				drawing_box = true;
+				box = cvRect(x, y, 0, 0);
+			}
+			break;
+		case CV_EVENT_LBUTTONUP:
+			{
+				drawing_box = false;
+				if(box.width < 0)
+				{
+					box.x += box.width;
+					box.width *= -1;
+				}
+				if(box.height < 0)
+				{
+					box.y += box.height;
+					box.height *= -1;
+				}
+				draw_box(image,box);
+			}
+			break;
+		}
+	}
