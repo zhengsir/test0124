@@ -1,0 +1,475 @@
+    /*   
+    功能：展示OpenCV的图像绘制功能 
+    */  
+    #include "stdafx.h"  
+    #include "cv.h"  
+    #include "highgui.h"  
+    #include <stdlib.h>  
+    #include <stdio.h>  
+    #define NUMBER 100  
+    #define DELAY 5  
+    char wndname[] = "Drawing Demo";  
+    CvScalar random_color(CvRNG* rng)  
+    {  
+        int icolor = cvRandInt(rng);  
+        return CV_RGB(icolor&255, (icolor>>8)&255, (icolor>>16)&255);  
+    }  
+    //CV_RGB  
+    //创建一个色彩值.  
+    // #define CV_RGB( r, g, b )  cvScalar( (b), (g), (r) )  
+    //======================================================================  
+    //RandInt  
+    //返回 32-bit 无符号整型并更新 RNG  
+    //unsigned cvRandInt( CvRNG* rng );  
+    //rng  
+    //被 cvRNG 初始化的 RNG 状态，被 RandSetRange   
+    //(虽然, 后面这个函数对我们正讨论的函数的结果没有什么影响)随意地设置。  
+    //函数 cvRandInt 返回均匀分布的随机 32-bit 无符号整型值并更新 RNG 状态。  
+    //它和 C 运行库里面的 rand() 函数十分相似，  
+    //但是它产生的总是一个 32-bit 数而 rand() 返回一个 0 到 RAND_MAX   
+    //（它是 2**16 或者 2**32, 依赖于操作平台）之间的数。  
+    //该函数用来产生一个标量随机数，例如点， patch sizes, table indices 等,  
+    //用模操作可以产生一个确定边界的整数，人和其他特定的边界缩放到 0.. 1可以产生一个浮点数。  
+    //==============================================================================================  
+      
+    int main( int argc, char** argv )  
+    {  
+        int line_type = CV_AA; // change it to 8 to see non-antialiased graphics  
+        //  Line  
+        //绘制连接两个点的线段  
+        //void cvLine( CvArr* img, CvPoint pt1, CvPoint pt2, CvScalar color,  
+        //             int thickness=1, int line_type=8, int shift=0 );  
+        //img  
+        //图像。  
+        //pt1  
+        //线段的第一个端点。  
+        //pt2  
+        //线段的第二个端点。  
+        //color  
+        //线段的颜色。  
+        //thickness  
+        //线段的粗细程度。  
+        //line_type  
+        //线段的类型。  
+        //8 (or 0) - 8-connected line（8邻接)连接 线。  
+        //4 - 4-connected line(4邻接)连接线。  
+        //CV_AA - antialiased 线条。  
+        //shift  
+        //坐标点的小数点位数。  
+        //函数cvLine 在图像中的点1和点2之间画一条线段。  
+        //线段被图像或感兴趣的矩形(ROI rectangle)所裁剪。  
+        //对于具有整数坐标的non-antialiasing 线条，  
+        //使用8-连接或者4-连接Bresenham 算法。画粗线条时结尾是圆形的。  
+        //画 antialiased 线条使用高斯滤波。要指定线段颜色，用户可以使用使用宏CV_RGB( r, g, b )。  
+        int i;  
+        CvPoint pt1,pt2;  
+        double angle;  
+        CvSize sz;  
+        CvPoint  ptt[6];  
+        CvPoint* pt[2];  
+        int  arr[2];  
+        CvFont font;  
+        CvRNG rng;  
+        int width = 1000, height = 700;  
+        int width3 = width*3, height3 = height*3;  
+        CvSize text_size;  
+        int ymin = 0;  
+        // Load the source image  
+        IplImage* image = cvCreateImage( cvSize(width,height), 8, 3 );  
+        //  CreateImage  
+        //创建头并分配数据  
+        //IplImage* cvCreateImage( CvSize size, int depth, int channels );  
+        //size  
+        //图像宽、高.  
+        //depth   
+        //图像元素的位深度，可以是下面的其中之一：  
+        //IPL_DEPTH_8U - 无符号8位整型  
+        //IPL_DEPTH_8S - 有符号8位整型  
+        //IPL_DEPTH_16U - 无符号16位整型  
+        //IPL_DEPTH_16S - 有符号16位整型  
+        //IPL_DEPTH_32S - 有符号32位整型  
+        //IPL_DEPTH_32F - 单精度浮点数  
+        //IPL_DEPTH_64F - 双精度浮点数  
+        //channels   
+        //每个元素（像素）的颜色通道数量.  
+        //可以是 1, 2, 3 或 4.通道是交叉存取的，  
+        //例如通常的彩色图像数据排列是：  
+        //b0 g0 r0 b1 g1 r1 ...  
+        //虽然通常 IPL 图象格式可以存贮非交叉存取的图像，  
+        //并且一些OpenCV 也能处理他, 但是这个函数只能创建交叉存取图像.  
+        //函数 cvCreateImage 创建头并分配数据，这个函数是下列的缩写型式  
+        //header = cvCreateImageHeader(size,depth,channels);  
+        //cvCreateData(header); //只是创建空间，并不会初始化空间内的数据  
+        IplImage* image2;  
+        // Create a window  
+        cvNamedWindow(wndname, 1 );  
+        //  cvNamedWindow  
+        //  
+        //创建窗口  
+        //int cvNamedWindow( const char* name, int flags=CV_WINDOW_AUTOSIZE );  
+        //name   
+        //窗口的名字，它被用来区分不同的窗口，并被显示为窗口标题。  
+        //flags   
+        //窗口属性标志，为1时表示会根据图像自动调整窗口大小。  
+        //目前唯一支持的标志是CV_WINDOW_AUTOSIZE。当这个标志被设置后，  
+        //用户不能手动改变窗口大小，窗口大小会自动调整以适合被显示图像（参考cvShowImage）。  
+        //函数cvNamedWindow创建一个可以放置图像和trackbar的窗口。  
+        //被创建的窗口可以通过它们的名字被引用。  
+        //如果已经存在这个名字的窗口，这个函数将不做任何事情。  
+        cvZero( image );  
+        //将要显示的矩阵置零，即显示黑色  
+        cvShowImage(wndname,image);  
+        //cvShowImage  
+        //  
+        //在指定窗口中显示图像  
+        //void cvShowImage( const char* name, const CvArr* image );  
+        //name  
+        //窗口的名字。  
+        //image  
+        //被显示的图像。  
+        //函数cvShowImage 在指定窗口中显示图像。  
+        //如果窗口创建的时候被设定标志CV_WINDOW_AUTOSIZE，那么图像将以原始尺寸显示；  
+        //否则，图像将被伸缩以适合窗口大小。  
+        rng = cvRNG((unsigned)-1);  
+        pt[0] = &(ptt[0]);  
+        pt[1] = &(ptt[3]);  
+        arr[0] = 3;  
+        arr[1] = 3;  
+        for (i = 0; i< NUMBER; i++)  
+        {  
+            pt1.x=cvRandInt(&rng) % width3 - width;  
+            pt1.y=cvRandInt(&rng) % height3 - height;  
+            pt2.x=cvRandInt(&rng) % width3 - width;  
+            pt2.y=cvRandInt(&rng) % height3 - height;  
+            //Line  
+            //绘制连接两个点的线段  
+            //void cvLine( CvArr* img, CvPoint pt1, CvPoint pt2, CvScalar color,  
+            //             int thickness=1, int line_type=8, int shift=0 );  
+            //img  
+            //图像。  
+            //pt1  
+            //线段的第一个端点。  
+            //pt2  
+            //线段的第二个端点。  
+            //color  
+            //线段的颜色。  
+            //thickness  
+            //线段的粗细程度。  
+            //line_type  
+            //线段的类型。  
+            //8 (or 0) - 8-connected line（8邻接)连接 线。  
+            //4 - 4-connected line(4邻接)连接线。  
+            //CV_AA - antialiased 线条。  
+            //shift  
+            //坐标点的小数点位数。  
+            //函数cvLine 在图像中的点1和点2之间画一条线段。  
+            //线段被图像或感兴趣的矩形(ROI rectangle)所裁剪。  
+            //对于具有整数坐标的non-antialiasing 线条，使用8-连接或者4-连接Bresenham 算法。  
+            //画粗线条时结尾是圆形的。画 antialiased 线条使用高斯滤波。  
+            //要指定线段颜色，用户可以使用使用宏CV_RGB( r, g, b )。  
+            //cvLine( image, pt1, pt2, random_color(&rng), cvRandInt(&rng)%10, line_type, 0 );  
+            cvLine( image, pt1, pt2, random_color(&rng), cvRandInt(&rng)%10, line_type, 0 );  
+            cvShowImage(wndname,image);  
+            //cvWaitKey  
+            //  
+            //等待按键事件  
+            //int cvWaitKey( int delay=0 );  
+            //delay   
+            //延迟的毫秒数。  
+            //函数cvWaitKey无限制的等待按键事件（delay<=0时）；  
+            //或者延迟"delay"毫秒。返回值为被按键的值，如果超过指定时间则返回-1。  
+            //注释：这个函数是HighGUI中唯一能够获取和操作事件的函数，  
+            //所以在一般的事件处理中，它需要周期地被调用，  
+            //除非HighGUI被用在某些能够处理事件的环境中。  
+            //译者注：比如在MFC环境下，这个函数不起作用。  
+            cvWaitKey(DELAY);  
+        }  
+        for (i = 0; i< NUMBER; i++)  
+        {  
+            pt1.x=cvRandInt(&rng) % width3 - width;  
+            pt1.y=cvRandInt(&rng) % height3 - height;  
+            pt2.x=cvRandInt(&rng) % width3 - width;  
+            pt2.y=cvRandInt(&rng) % height3 - height;  
+            //Rectangle  
+            //绘制简单、指定粗细或者带填充的 矩形  
+            //void cvRectangle( CvArr* img, CvPoint pt1, CvPoint pt2, CvScalar color,  
+            //                  int thickness=1, int line_type=8, int shift=0 );  
+            //img  
+            //图像.  
+            //pt1  
+            //矩形的一个顶点。  
+            //pt2  
+            //矩形对角线上的另一个顶点  
+            //color  
+            //线条颜色 (RGB) 或亮度（灰度图像 ）(grayscale image）。  
+            //thickness  
+            //组成矩形的线条的粗细程度。取负值时（如 CV_FILLED）函数绘制填充了色彩的矩形。  
+            //line_type  
+            //线条的类型。见cvLine的描述  
+            //shift  
+            //坐标点的小数点位数。  
+            //　  
+            //函数 cvRectangle 通过对角线上的两个顶点绘制矩形。  
+            cvRectangle( image,pt1, pt2, random_color(&rng), cvRandInt(&rng)%10-1, line_type, 0 );  
+            cvShowImage(wndname,image);  
+            cvWaitKey(DELAY);  
+        }  
+        for (i = 0; i< NUMBER; i++)  
+        {  
+            pt1.x=cvRandInt(&rng) % width3 - width;  
+            pt1.y=cvRandInt(&rng) % height3 - height;  
+            sz.width =cvRandInt(&rng)%200;  
+            sz.height=cvRandInt(&rng)%200;  
+            angle = (cvRandInt(&rng)%1000)*0.180;  
+            //Ellipse  
+            //绘制椭圆圆弧和椭圆扇形。  
+            //void cvEllipse( CvArr* img, CvPoint center, CvSize axes, double angle,  
+            //                double start_angle, double end_angle, CvScalar color,  
+            //                int thickness=1, int line_type=8, int shift=0 );  
+            //img  
+            //图像。  
+            //center  
+            //椭圆圆心坐标。  
+            //axes  
+            //轴的长度。  
+            //angle  
+            //偏转的角度。  
+            //start_angle  
+            //圆弧起始角的角度。.  
+            //end_angle  
+            //圆弧终结角的角度。  
+            //color  
+            //线条的颜色。  
+            //thickness  
+            //线条的粗细程度。  
+            //line_type  
+            //线条的类型,见CVLINE的描述。  
+            //shift  
+            //圆心坐标点和数轴的精度。  
+            //具体参数显示属性参考：http://www.opencv.org.cn/index.php/Cxcore%E7%BB%98%E5%9B%BE%E5%87%BD%E6%95%B0#Rectangle  
+            cvEllipse( image, pt1, sz, angle, angle - 100, angle + 200,  
+                random_color(&rng), cvRandInt(&rng)%10-1, line_type, 0 );  
+            cvShowImage(wndname,image);  
+            cvWaitKey(DELAY);  
+        }  
+        for (i = 0; i< NUMBER; i++)  
+        {  
+            pt[0][0].x=cvRandInt(&rng) % width3 - width;  
+            pt[0][0].y=cvRandInt(&rng) % height3 - height;  
+            pt[0][1].x=cvRandInt(&rng) % width3 - width;  
+            pt[0][1].y=cvRandInt(&rng) % height3 - height;  
+            pt[0][2].x=cvRandInt(&rng) % width3 - width;  
+            pt[0][2].y=cvRandInt(&rng) % height3 - height;  
+            pt[1][0].x=cvRandInt(&rng) % width3 - width;  
+            pt[1][0].y=cvRandInt(&rng) % height3 - height;  
+            pt[1][1].x=cvRandInt(&rng) % width3 - width;  
+            pt[1][1].y=cvRandInt(&rng) % height3 - height;  
+            pt[1][2].x=cvRandInt(&rng) % width3 - width;  
+            pt[1][2].y=cvRandInt(&rng) % height3 - height;  
+            //PolyLine  
+            //绘制简单线段或折线。  
+            //void cvPolyLine( CvArr* img, CvPoint** pts, int* npts, int contours, int is_closed,  
+            //                 CvScalar color, int thickness=1, int line_type=8, int shift=0 );  
+            //img  
+            //图像。  
+            //pts  
+            //折线的顶点指针数组。  
+            //npts  
+            //折线的定点个数数组。也可以认为是pts指针数组的大小  
+            //contours  
+            //折线的线段数量。  
+            //is_closed  
+            //指出多边形是否封闭。如果封闭，函数将起始点和结束点连线。  
+            //color  
+            //折线的颜色。  
+            //thickness  
+            //线条的粗细程度。  
+            //line_type  
+            //线段的类型。参见cvLine。  
+            //shift  
+            //顶点的小数点位数。  
+            //函数cvPolyLine 绘制一个简单直线或折线。  
+            cvPolyLine( image, pt, arr, 2, 1, random_color(&rng), cvRandInt(&rng)%10, line_type, 0 );  
+            cvShowImage(wndname,image);  
+            cvWaitKey(DELAY);  
+        }  
+        for (i = 0; i< NUMBER; i++)  
+        {  
+            pt[0][0].x=cvRandInt(&rng) % width3 - width;  
+            pt[0][0].y=cvRandInt(&rng) % height3 - height;  
+            pt[0][1].x=cvRandInt(&rng) % width3 - width;  
+            pt[0][1].y=cvRandInt(&rng) % height3 - height;  
+            pt[0][2].x=cvRandInt(&rng) % width3 - width;  
+            pt[0][2].y=cvRandInt(&rng) % height3 - height;  
+            pt[1][0].x=cvRandInt(&rng) % width3 - width;  
+            pt[1][0].y=cvRandInt(&rng) % height3 - height;  
+            pt[1][1].x=cvRandInt(&rng) % width3 - width;  
+            pt[1][1].y=cvRandInt(&rng) % height3 - height;  
+            pt[1][2].x=cvRandInt(&rng) % width3 - width;  
+            pt[1][2].y=cvRandInt(&rng) % height3 - height;  
+            //FillPoly  
+            //填充多边形内部  
+            //void cvFillPoly( CvArr* img, CvPoint** pts, int* npts, int contours,  
+            //                 CvScalar color, int line_type=8, int shift=0 );  
+            //img  
+            //图像。  
+            //pts  
+            //指向多边形的数组指针。  
+            //npts  
+            //多边形的顶点个数的数组。  
+            //contours  
+            //组成填充区域的线段的数量。  
+            //color  
+            //多边形的颜色。  
+            //line_type  
+            //组成多边形的线条的类型。  
+            //shift  
+            //顶点坐标的小数点位数。  
+            //函数cvFillPoly用于一个单独被多边形轮廓所限定的区域内进行填充。  
+            //函数可以填充复杂的区域,例如，有漏洞的区域和有交叉点的区域等等。  
+            cvFillPoly( image, pt, arr, 2, random_color(&rng), line_type, 0 );  
+            cvShowImage(wndname,image);  
+            cvWaitKey(DELAY);  
+        }  
+        for (i = 0; i< NUMBER; i++)  
+        {  
+            pt1.x=cvRandInt(&rng) % width3 - width;  
+            pt1.y=cvRandInt(&rng) % height3 - height;  
+            //Circle  
+            //绘制圆形。  
+            //void cvCircle( CvArr* img, CvPoint center, int radius, CvScalar color,  
+            //               int thickness=1, int line_type=8, int shift=0 );  
+            //img  
+            //图像。  
+            //center  
+            //圆心坐标。  
+            //radius  
+            //圆形的半径。  
+            //color  
+            //线条的颜色。  
+            //thickness  
+            //如果是正数，表示组成圆的线条的粗细程度。否则，表示圆是否被填充。  
+            //line_type  
+            //线条的类型。见 cvLine 的描述  
+            //shift  
+            //圆心坐标点和半径值的小数点位数。  
+            //函数cvCircle绘制或填充一个给定圆心和半径的圆。圆被感兴趣矩形所裁剪。   
+            //若指定圆的颜色，可以使用宏 CV_RGB ( r, g, b )。  
+            cvCircle( image, pt1, cvRandInt(&rng)%300, random_color(&rng),  
+                cvRandInt(&rng)%10-1, line_type, 0 );  
+            cvShowImage(wndname,image);  
+            cvWaitKey(DELAY);  
+        }  
+        for (i = 1; i< NUMBER; i++)  
+        {  
+            pt1.x=cvRandInt(&rng) % width3 - width;  
+            pt1.y=cvRandInt(&rng) % height3 - height;  
+            //InitFont  
+            //初始化字体结构体。  
+            //void cvInitFont( CvFont* font, int font_face, double hscale,  
+            //                 double vscale, double shear=0,  
+            //                 int thickness=1, int line_type=8 );  
+            //font  
+            //被初始化的字体结构体。  
+            //font_face  
+            //字体名称标识符。只是Hershey 字体集( http://sources.isc.org/utils/misc/hershey-font.txt )的一个子集得到支持。  
+            //CV_FONT_HERSHEY_SIMPLEX - 正常大小无衬线字体。  
+            //CV_FONT_HERSHEY_PLAIN - 小号无衬线字体。  
+            //CV_FONT_HERSHEY_DUPLEX - 正常大小无衬线字体。( 比CV_FONT_HERSHEY_SIMPLEX更复杂)  
+            //CV_FONT_HERSHEY_COMPLEX - 正常大小有衬线字体。  
+            //CV_FONT_HERSHEY_TRIPLEX - 正常大小有衬线字体 ( 比CV_FONT_HERSHEY_COMPLEX更复杂)  
+            //CV_FONT_HERSHEY_COMPLEX_SMALL - CV_FONT_HERSHEY_COMPLEX 的小译本。  
+            //CV_FONT_HERSHEY_SCRIPT_SIMPLEX - 手写风格字体。  
+            //CV_FONT_HERSHEY_SCRIPT_COMPLEX - 比CV_FONT_HERSHEY_SCRIPT_SIMPLEX更复杂。  
+            //这个参数能够由一个值和可选择的CV_FONT_ITALIC字体标记合成，就是斜体字。  
+            //hscale  
+            //字体宽度。如果等于1.0f，字符的宽度是最初的字体宽度。如果等于0.5f，字符的宽度是最初的字体宽度的一半。  
+            //vscale  
+            //字体高度。如果等于1.0f，字符的高度是最初的字体高度。如果等于0.5f，字符的高度是最初的字体高度的一半。  
+            //shear  
+            //字体的斜度。当值为0时 ，字符不倾斜；当值为1.0f时，字体倾斜≈45度，等等。厚度让字母着重显示。函数cvLine用于绘制字母。  
+            //thickness  
+            //字体笔划的粗细程度。  
+            //line_type  
+            //字体笔划的类型，参见cvLine。  
+            //函数cvInitFont初始化字体结构体，字体结构体可以被传递到文字显示函数中。  
+            cvInitFont( &font, cvRandInt(&rng) % 8,  
+                (cvRandInt(&rng)%100)*0.05+0.1,  
+                (cvRandInt(&rng)%100)*0.05+0.1,   
+                (cvRandInt(&rng)%5)*0.1, cvRound(cvRandInt(&rng)%10),   
+                line_type );  
+            //PutText  
+            //在图像中显示文本字符串。  
+            //void cvPutText( CvArr* img, const char* text, CvPoint org, const CvFont* font, CvScalar color );  
+            //img  
+            //输入图像。  
+            //text  
+            //要显示的字符串。  
+            //org  
+            //第一个字符左下角的坐标。  
+            //font  
+            //字体结构体。  
+            //color  
+            //文本的字体颜色。  
+            //函数cvPutText将具有指定字体的和指定颜色的文本加载到图像中。  
+            //加载到图像中的文本被感兴趣的矩形框(ROI rectangle)剪切。  
+            //不属于指定字体库的字符用矩形字符替代显示。　  
+            cvPutText( image, "Testing text rendering!", pt1, &font, random_color(&rng));  
+            cvShowImage(wndname,image);  
+            cvWaitKey(DELAY);  
+        }  
+        cvInitFont( &font, CV_FONT_HERSHEY_COMPLEX, 3, 3, 0.0, 5, line_type );  
+        //GetTextSize  
+        //获得字符串的宽度和高度。  
+        //void cvGetTextSize( const char* text_string, const CvFont* font, CvSize* text_size, int* baseline );  
+        //font  
+        //字体结构体  
+        //text_string  
+        //输入字符串。  
+        //text_size  
+        //合成字符串的字符的大小。文本的高度不包括基线以下的部分。  
+        //baseline  
+        //相对于文字最底部点的基线的Y坐标。  
+        //函数cvGetTextSize是用于在指定字体时计算字符串的绑定区域(binding rectangle)。  
+        cvGetTextSize( "I LOVE  GuaGua!", &font, &text_size, &ymin );  
+        pt1.x = (width - text_size.width)/2;  
+        pt1.y = (height + text_size.height)/2;  
+        //  CloneImage  
+        //制作图像的完整拷贝  
+        //IplImage* cvCloneImage( const IplImage* image );  
+        //image   
+        //原图像.  
+        //函数 cvCloneImage 制作图像的完整拷贝包括头、ROI和数据  
+        image2 = cvCloneImage(image);  
+        for( i = 0; i < 255; i++ )  
+        {  
+            //SubS  
+            //计算数组和数量之间的差  
+            //void cvSubS( const CvArr* src, CvScalar value, CvArr* dst, const CvArr* mask=NULL );  
+            //src  
+            //原数组.  
+            //value  
+            //被减的数量.  
+            //dst  
+            //输出数组.  
+            //mask  
+            //操作覆盖面（ 8-bit 单通道数组）; 只有覆盖面指定的输出数组被修改  
+            //函数 cvSubS 从原数组的每个元素中减去一个数量：  
+            //dst(I)=src(I)-value if mask(I)!=0  
+            //除覆盖面外所有数组都必须有相同的类型，相同的大小（或ROI大小）。  
+            //===============================================================  
+            //cvScalarAll()  
+            //四个纯量都是同一个输入的数字,通常为灰阶的形态  
+            //cvScalarAll(输入全部纯量值的数据)  
+            cvSubS( image2, cvScalarAll(i), image, 0 );  
+            cvPutText( image, "I LOVE  GuaGua!", pt1, &font, CV_RGB(255,i,i));  
+            cvShowImage(wndname,image);  
+            cvWaitKey(DELAY);  
+        }  
+        // Wait for a key stroke; the same function arranges events processing  
+        cvWaitKey(0);  
+        cvReleaseImage(?);  
+        cvReleaseImage(&image2);  
+        cvDestroyWindow(wndname);  
+        return 0;  
+    }  
