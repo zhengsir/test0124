@@ -1,0 +1,52 @@
+//drawing_test
+char wndname[] = "Drawing Demo";  
+CvScalar random_color(CvRNG* rng)  
+{  
+    int icolor = cvRandInt(rng);  
+	printf("icolor = %d, icolor_1 = %d, icolor_8 = %d, icolor_16 = %d\n", icolor, icolor&255, (icolor>>8)&255, (icolor>>16)&255);
+    return CV_RGB(icolor&255, (icolor>>8)&255, (icolor>>16)&255);  
+} 
+int main_line( int argc, char** argv )  
+{  
+	char text[10];
+    int line_type = CV_AA; // change it to 8 to see non-antialiased graphics 
+    int i;  
+    CvPoint pt1, pt2;  
+    //double angle;  
+    //CvSize sz;  
+    CvPoint  ptt[6];  
+    CvPoint* pt[2];  
+    int  arr[2];  
+    CvFont font;  
+    CvRNG rng;  
+    int width = 400, height = 300;  
+    int width3 = width*3, height3 = height*3;  
+    //CvSize text_size;  
+    int ymin = 0;  
+    IplImage* image = cvCreateImage(cvSize(width,height), 8, 3);  
+    //IplImage* image2;   
+    cvNamedWindow(wndname, CV_WINDOW_AUTOSIZE);  
+    cvZero(image);  
+    //将要显示的矩阵置零，即显示黑色  
+    cvShowImage(wndname, image);  
+    rng = cvRNG((unsigned)-1);  
+    pt[0] = &(ptt[0]);  
+    pt[1] = &(ptt[3]);  
+    arr[0] = 3;  
+    arr[1] = 3;  
+	//*画直线
+	
+	pt1.x = 100;pt1.y = 100;
+	pt2.x = 200;pt2.y = 200;
+    for (i = 0; i< 5; i++)  
+    {  
+		cvLine(image, pt1, pt2, cvScalar(0xff, 0x00, 0x00), 2, line_type, 0); 
+		printf("i=%d \n",i);
+		pt1.x += 10;
+		pt2.x += 10;
+        cvShowImage(wndname, image);   
+        cvWaitKey(1000);  
+    } 
+	
+
+}  
