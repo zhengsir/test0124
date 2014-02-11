@@ -1,0 +1,19 @@
+int main(int argc, char* argv[]) 
+{ 
+char wndname[] = "Drawing Demo"; 
+cvNamedWindow(wndname); 
+int arr[1]; 
+arr[0] = 4;  // 四边形
+CvPoint ** pt = new CvPoint*[1]; 
+pt[0] = new CvPoint[4]; 
+pt[0][0] = cvPoint(10,10); 
+pt[0][1] = cvPoint(100,10); 
+pt[0][2] = cvPoint(100,100); 
+pt[0][3] = cvPoint(10,100);  //顶点
+IplImage* image = cvCreateImage( cvSize(200,200), 8, 3 ); 
+cvPolyLine(image, pt, arr, 1, 1, CV_RGB(250,0,0)); 
+//cvFillPoly(image,pt,arr,1,CV_RGB(250,0,0)); 
+cvShowImage(wndname,image); 
+cvWaitKey(10000); 
+return 0; 
+}
